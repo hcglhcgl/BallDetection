@@ -1,7 +1,10 @@
 # BallDetection
-Ball Detection in C++ using OpenCV
+Orange/white Ball Detection in C++ using OpenCV
 
-To build 
+To build:
+
+```bash
 cd build
 cmake ..
 make
+```
