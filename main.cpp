@@ -16,14 +16,15 @@ int main( int argc, char** argv )
 
     //Single image:
 
-    //Mat image = imread("/home/hcgl/Desktop/ball_detection/white_pics/60.jpg");
-    //namedWindow("Ball");
-    //imshow("Ball", image);
+    Mat image = imread("/home/hcgl/Desktop/ball_detection/orange_pics/o55.jpg");
+    ballPose = ball_finder.find_ball(image,true, RED, false);
+    namedWindow("Ball");
+    imshow("Ball", image);
     //cout << " x: " << ballPose.x << " y: " << ballPose.y << " z: " << ballPose.z << endl;
-    // waitKey(0); // Wait for any keystroke in the window
+    waitKey(0); // Wait for any keystroke in the window
 
     //looping through all:
-    String folderpath = "/home/hcgl/Desktop/ball_detection/white_pics/*.jpg";
+    /*String folderpath = "/home/hcgl/Desktop/ball_detection/white_pics/*.jpg";
     vector<String> filenames;
     cv::glob(folderpath, filenames);
 
@@ -34,7 +35,7 @@ int main( int argc, char** argv )
 
         imshow("Ball", image);
         waitKey(0); // Wait for any keystroke in the window
-    }
+    } */
     
     destroyAllWindows(); //destroy all opened windows*/
 }
