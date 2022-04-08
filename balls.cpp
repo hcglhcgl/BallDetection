@@ -33,12 +33,12 @@ BallFinder::BallFinder()
     orangeHSV.HSV_upper[1] = 255;
     orangeHSV.HSV_upper[2] = 255;
     //White
-    whiteHSV.HSV_lower[0] = 0;
-    whiteHSV.HSV_lower[1] = 0;
-    whiteHSV.HSV_lower[2] = 120;
+    whiteHSV.HSV_lower[0] = 30;
+    whiteHSV.HSV_lower[1] = 20;
+    whiteHSV.HSV_lower[2] = 50;
 
-    whiteHSV.HSV_upper[0] = 255;
-    whiteHSV.HSV_upper[1] = 30;
+    whiteHSV.HSV_upper[0] = 180;
+    whiteHSV.HSV_upper[1] = 80;
     whiteHSV.HSV_upper[2] = 255;
 }
 
@@ -46,19 +46,27 @@ BallFinder::~BallFinder(){
 
 };
 
-pose_t BallFinder::find_ball(cv::Mat frame, bool show_image, bool red_or_white) {
+pose_t BallFinder::find_ball(cv::Mat frame, bool show_image, bool red_or_white,bool debug) {
+    Mat cropped;
     Mat blurred;
     Mat mask;
     Mat mask_eroded;
     Mat mask_dilated;
     Mat HSV;
 
+    //Crop the top 50%
+    cropped = imageReducer(frame,60);
+    if (debug) {
+        imshow("cropped", cropped);
+        waitKey(0);
+    }
+    
     //Blurred
-    GaussianBlur(frame,blurred,Size(11, 11),0);
+    GaussianBlur(cropped,blurred,Size(11, 11),0);
 
     int width; int height;
-    height = frame.size[0];
-    width = frame.size[1];
+    height = cropped.size[0];
+    width = cropped.size[1];
 
     cvtColor(blurred, HSV, COLOR_BGR2HSV);
 
@@ -70,28 +78,37 @@ pose_t BallFinder::find_ball(cv::Mat frame, bool show_image, bool red_or_white) 
         inRange(HSV, Scalar (whiteHSV.HSV_lower[0],whiteHSV.HSV_lower[1],whiteHSV.HSV_lower[2]),
     Scalar (whiteHSV.HSV_upper[0],whiteHSV.HSV_upper[1],whiteHSV.HSV_upper[2]),mask);
     }
+
+    if (debug) {
+        imshow("mask", mask);
+        waitKey(0);
+    }
     
-    imshow("mask", mask);
-    waitKey(0);
     // Create a structuring element (SE)
     int morph_size = 2;
     Mat element = getStructuringElement(MORPH_RECT, Size(11,11));
     
     Mat erod, dill;
 
-    erode(mask,mask_eroded,element,Point(-1, -1), 1);
+    erode(mask,mask_eroded,element,Point(-1, -1), 2);
 
-    imshow("Eroded", mask_eroded);
-    waitKey(0);
+    if (debug){
+        imshow("Eroded", mask_eroded);
+        waitKey(0);
+    }
+    
 
     dilate(mask_eroded,mask_dilated,element,Point(-1, -1), 2);
     
-    imshow("Dilated", mask_dilated);
-    waitKey(0);
-
+    if (debug) {
+        imshow("Dilated", mask_dilated);
+        waitKey(0);
+    }
+    
     vector<vector<Point>> contours;
     findContours(mask_dilated,contours,RETR_EXTERNAL,CHAIN_APPROX_SIMPLE);
-    
+    //vector<Vec3f> contours;
+    //HoughCircles(mask_dilated, contours, HOUGH_GRADIENT, 1, 18, 180, 18, 10, 25);
     // Approximate contours to polygons + get bounding circles
     vector<vector<Point> > contours_poly( contours.size() );
     vector<Point2f>centers( contours.size() );
@@ -108,7 +125,25 @@ pose_t BallFinder::find_ball(cv::Mat frame, bool show_image, bool red_or_white) 
         }
     }
 
-   /* Point_<int> v0,v1,h0,h1;
+  
+    if (idx>-1){
+        cout << "Ball detected!" << endl;
+        circle( cropped, centers[idx], (int)radius[idx], Scalar(0,255,0), 2 );
+        circle( cropped, centers[idx], 3, Scalar(255,0,0), -1 );
+    }
+
+    if(debug) {
+        imshow("Ball", frame);
+
+        waitKey(0); // Wait for any keystroke in the window
+
+        destroyAllWindows(); //destroy all opened windows
+    }
+
+    return ballPose;
+}
+
+ /* Point_<int> v0,v1,h0,h1;
     int offset_ball = 0;
     h0 = Point(0,480 + offset_ball); 
     h1 = Point(1280, 480 + offset_ball);
@@ -120,23 +155,6 @@ pose_t BallFinder::find_ball(cv::Mat frame, bool show_image, bool red_or_white) 
     circle(frame, pt_ball_detection, 10, Scalar(0,0,255),-1); 
     line(frame, v0, v1, Scalar(0,0,255), 2);
     line(frame, h0, h1, Scalar(0,0,255), 2);*/
-
-    if (idx>-1){
-        cout << "Ball detected!" << endl;
-        circle( frame, centers[idx], (int)radius[idx], Scalar(0,255,0), 2 );
-        circle( frame, centers[idx], 3, Scalar(255,0,0), -1 );
-    }
-
-    namedWindow("Ball");
-    imshow("Ball", frame);
-
-    waitKey(0); // Wait for any keystroke in the window
-
-    destroyAllWindows(); //destroy all opened windows
-
-    return ballPose;
-}
-
 
 
 /*
@@ -154,3 +172,18 @@ pose_t BallFinder::find_ball(cv::Mat frame, bool show_image, bool red_or_white) 
             max_idx = j;
         }
     }*/
+
+Mat BallFinder::imageReducer(Mat image, int percentage) {
+	Mat cropped_image;
+
+    int width; int height;
+    height = image.size[0];
+    width = image.size[1];
+
+    int newHeight;
+    newHeight = (height/100)*percentage;
+
+    cropped_image = image(Range(newHeight,height),Range(0,width));
+
+    return cropped_image;
+}

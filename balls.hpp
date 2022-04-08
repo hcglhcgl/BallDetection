@@ -30,7 +30,8 @@ class BallFinder
     public:
         BallFinder();
         ~BallFinder();
-        pose_t find_ball(cv::Mat frame, bool show_image, bool red_or_white);
+        pose_t find_ball(cv::Mat frame, bool show_image, bool red_or_white, bool debug);
+        Mat imageReducer(Mat image, int percentage);
     private:
         pose_t ballPose;
         Mat cameraMatrix;
