@@ -26,10 +26,10 @@ BallFinder::BallFinder()
     //HSV Values
     //Orange
     orangeHSV.HSV_lower[0] = 0;
-    orangeHSV.HSV_lower[1] = 140;
-    orangeHSV.HSV_lower[2] = 90;
+    orangeHSV.HSV_lower[1] = 150;
+    orangeHSV.HSV_lower[2] = 50;
 
-    orangeHSV.HSV_upper[0] = 28;
+    orangeHSV.HSV_upper[0] = 15;
     orangeHSV.HSV_upper[1] = 255;
     orangeHSV.HSV_upper[2] = 255;
     //White
@@ -57,7 +57,7 @@ pose_t BallFinder::find_ball(cv::Mat frame, bool show_image, bool red_or_white,b
     ballPose.valid = false;
 
     //Crop the top 50%
-    cropped = imageReducer(frame,60);
+    cropped = imageReducer(frame,50);
     if (debug) {
         imshow("cropped", cropped);
         waitKey(0);
@@ -87,9 +87,9 @@ pose_t BallFinder::find_ball(cv::Mat frame, bool show_image, bool red_or_white,b
     }
     
     // Create a structuring element (SE)
-    int morph_size = 2;
     Mat element = getStructuringElement(MORPH_RECT, Size(11,11));
-    
+    //Mat element = getStructuringElement(MORPH_ELLIPSE, Size(11,11));
+
     Mat erod, dill;
 
     erode(mask,mask_eroded,element,Point(-1, -1), 2);
@@ -111,6 +111,7 @@ pose_t BallFinder::find_ball(cv::Mat frame, bool show_image, bool red_or_white,b
     findContours(mask_dilated,contours,RETR_EXTERNAL,CHAIN_APPROX_SIMPLE);
     //vector<Vec3f> contours;
     //HoughCircles(mask_dilated, contours, HOUGH_GRADIENT, 1, 18, 180, 18, 10, 25);
+
     // Approximate contours to polygons + get bounding circles
     vector<vector<Point> > contours_poly( contours.size() );
     vector<Point2f>centers( contours.size() );

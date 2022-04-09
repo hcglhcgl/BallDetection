@@ -40,7 +40,7 @@ cv2.createTrackbar('high V','controls',255,255,callback)
 
 while(1):
 	#read source image
-	img=cv2.imread("/home/hcgl/Desktop/ball_detection/white_pics/60.jpg")
+	img=cv2.imread("/home/hcgl/Desktop/ball_detection/orange_pics/o55.jpg")
 	#convert sourece image to HSC color mode
 	hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
@@ -53,7 +53,6 @@ while(1):
 	print (mask)
 	#masking HSV value selected color becomes black
 	res = cv2.bitwise_and(img, img, mask=mask)
-
 
 
 	#show image
