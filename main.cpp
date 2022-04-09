@@ -20,7 +20,7 @@ int main( int argc, char** argv )
     ballPose = ball_finder.find_ball(image,true, RED, false);
     namedWindow("Ball");
     imshow("Ball", image);
-    //cout << " x: " << ballPose.x << " y: " << ballPose.y << " z: " << ballPose.z << endl;
+    cout << " x: " << ballPose.x << " y: " << ballPose.y << " z: " << ballPose.z << endl;
     waitKey(0); // Wait for any keystroke in the window
 
     //looping through all:

@@ -32,12 +32,14 @@ class BallFinder
         ~BallFinder();
         pose_t find_ball(cv::Mat frame, bool show_image, bool red_or_white, bool debug);
         Mat imageReducer(Mat image, int percentage);
+        float getDistance(int radius);
     private:
         pose_t ballPose;
         Mat cameraMatrix;
 	    Mat distCoeffs;
         HSV orangeHSV;
         HSV whiteHSV;
+        float width_ball_mm = 42;
 };
 
 

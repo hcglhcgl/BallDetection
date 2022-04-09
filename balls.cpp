@@ -54,6 +54,8 @@ pose_t BallFinder::find_ball(cv::Mat frame, bool show_image, bool red_or_white,b
     Mat mask_dilated;
     Mat HSV;
 
+    ballPose.valid = false;
+
     //Crop the top 50%
     cropped = imageReducer(frame,60);
     if (debug) {
@@ -128,8 +130,15 @@ pose_t BallFinder::find_ball(cv::Mat frame, bool show_image, bool red_or_white,b
   
     if (idx>-1){
         cout << "Ball detected!" << endl;
-        circle( cropped, centers[idx], (int)radius[idx], Scalar(0,255,0), 2 );
-        circle( cropped, centers[idx], 3, Scalar(255,0,0), -1 );
+
+        Point2f center = centers[idx];
+        circle( cropped, center, (int)radius[idx], Scalar(0,255,0), 2 );
+        circle( cropped, center, 3, Scalar(255,0,0), -1 );
+
+        ballPose.valid = true;
+        ballPose.x = center.x;
+        ballPose.y = center.y;
+        ballPose.z = getDistance((int)radius[idx]);
     }
 
     if(debug) {
@@ -139,8 +148,31 @@ pose_t BallFinder::find_ball(cv::Mat frame, bool show_image, bool red_or_white,b
 
         destroyAllWindows(); //destroy all opened windows
     }
-
+    
     return ballPose;
+}
+
+float BallFinder::getDistance(int radius) {    
+	int width_ball_pixels = radius * 2;
+	int f = 771.17;
+	float distance = ((width_ball_mm / width_ball_pixels) * f) / 10;
+
+    return distance;
+}
+
+Mat BallFinder::imageReducer(Mat image, int percentage) {
+	Mat cropped_image;
+
+    int width; int height;
+    height = image.size[0];
+    width = image.size[1];
+
+    int newHeight;
+    newHeight = (height/100)*percentage;
+
+    cropped_image = image(Range(newHeight,height),Range(0,width));
+
+    return cropped_image;
 }
 
  /* Point_<int> v0,v1,h0,h1;
@@ -172,18 +204,3 @@ pose_t BallFinder::find_ball(cv::Mat frame, bool show_image, bool red_or_white,b
             max_idx = j;
         }
     }*/
-
-Mat BallFinder::imageReducer(Mat image, int percentage) {
-	Mat cropped_image;
-
-    int width; int height;
-    height = image.size[0];
-    width = image.size[1];
-
-    int newHeight;
-    newHeight = (height/100)*percentage;
-
-    cropped_image = image(Range(newHeight,height),Range(0,width));
-
-    return cropped_image;
-}
