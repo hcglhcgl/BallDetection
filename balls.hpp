@@ -31,15 +31,20 @@ class BallFinder
         BallFinder();
         ~BallFinder();
         pose_t find_ball(cv::Mat frame, bool show_image, bool red_or_white, bool debug);
-        Mat imageReducer(Mat image, int percentage);
+        Mat imageReducer(Mat image, int percentage,bool reverse, int width_percentage);
         float getDistance(int radius);
+        float getDistanceTree(int radius);
         pose_t treeID(cv::Mat frame, bool show_image, bool red_or_white, bool debug);
+        pose_t trunkFinder(cv::Mat frame, bool show_image, bool debug);
+        Mat imageReducerReverse(Mat image, int percentage);
     private:
         pose_t ballPose;
         Mat cameraMatrix;
 	    Mat distCoeffs;
         HSV orangeHSV;
         HSV whiteHSV;
+        HSV greenHSV;
+        pose_t stubPose;
         float width_ball_mm = 42;
 };
 

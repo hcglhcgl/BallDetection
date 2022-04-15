@@ -40,6 +40,14 @@ BallFinder::BallFinder()
     whiteHSV.HSV_upper[0] = 180;
     whiteHSV.HSV_upper[1] = 80;
     whiteHSV.HSV_upper[2] = 255;
+    //Green
+    greenHSV.HSV_lower[0] = 31;
+    greenHSV.HSV_lower[1] = 110;
+    greenHSV.HSV_lower[2] = 70;
+
+    greenHSV.HSV_upper[0] = 49;
+    greenHSV.HSV_upper[1] = 255;
+    greenHSV.HSV_upper[2] = 255;
 }
 
 BallFinder::~BallFinder(){
@@ -57,7 +65,7 @@ pose_t BallFinder::find_ball(cv::Mat frame, bool show_image, bool red_or_white,b
     ballPose.valid = false;
 
     //Crop the top 20%
-    cropped = imageReducer(frame,20);
+    cropped = imageReducer(frame,20,false,0);
     if (debug) {
         imshow("cropped", cropped);
         waitKey(0);
@@ -92,7 +100,7 @@ pose_t BallFinder::find_ball(cv::Mat frame, bool show_image, bool red_or_white,b
 
     Mat erod, dill;
 
-    erode(mask,mask_eroded,element,Point(-1, -1), 2);
+    cv::erode(mask,mask_eroded,element,Point(-1, -1), 2);
 
     if (debug){
         imshow("Eroded", mask_eroded);
@@ -108,7 +116,7 @@ pose_t BallFinder::find_ball(cv::Mat frame, bool show_image, bool red_or_white,b
     }
     
     vector<vector<Point>> contours;
-    findContours(mask_dilated,contours,RETR_EXTERNAL,CHAIN_APPROX_SIMPLE);
+    cv::findContours(mask_dilated,contours,RETR_EXTERNAL,CHAIN_APPROX_SIMPLE);
     //vector<Vec3f> contours;
     //HoughCircles(mask_dilated, contours, HOUGH_GRADIENT, 1, 18, 180, 18, 10, 25);
 
@@ -161,7 +169,15 @@ float BallFinder::getDistance(int radius) {
     return distance;
 }
 
-Mat BallFinder::imageReducer(Mat image, int percentage) {
+float BallFinder::getDistanceTree(int radius) {    
+	int width_ball_pixels = radius * 2;
+	int f = 771.17;
+	float distance = ((width_ball_mm / width_ball_pixels) * f) / 10;
+
+    return distance;
+}
+
+Mat BallFinder::imageReducer(Mat image, int percentage,bool reverse, int width_percentage) {
 	Mat cropped_image;
 
     int width; int height;
@@ -171,8 +187,24 @@ Mat BallFinder::imageReducer(Mat image, int percentage) {
     int newHeight;
     newHeight = (height/100)*percentage;
 
-    cropped_image = image(Range(newHeight,height),Range(0,width));
-
+    if (reverse) {
+        if (width_percentage != 0) {
+            int newWidth = (width/100)*percentage;
+            cropped_image = image(Range(0,newHeight),Range(newWidth,width));
+        }
+        else {
+            cropped_image = image(Range(0,newHeight),Range(0,width));
+        }
+    }
+    else {
+        if (width_percentage != 0) {
+            
+        }
+        else {
+            cropped_image = image(Range(newHeight,height),Range(0,width));
+        }
+    }
+    
     return cropped_image;
 }
 
@@ -187,7 +219,7 @@ pose_t BallFinder::treeID(cv::Mat frame, bool show_image, bool red_or_white,bool
     ballPose.valid = false;
 
     //Crop the top 20%
-    cropped = imageReducer(frame,20);
+    cropped = imageReducer(frame,20,false,0);
     if (debug) {
         imshow("cropped", cropped);
         waitKey(0);
@@ -222,7 +254,7 @@ pose_t BallFinder::treeID(cv::Mat frame, bool show_image, bool red_or_white,bool
 
     Mat erod, dill;
 
-    erode(mask,mask_eroded,element,Point(-1, -1), 2);
+    cv::erode(mask,mask_eroded,element,Point(-1, -1), 2);
 
     if (debug){
         imshow("Eroded", mask_eroded);
@@ -238,7 +270,7 @@ pose_t BallFinder::treeID(cv::Mat frame, bool show_image, bool red_or_white,bool
     }
     
     vector<vector<Point>> contours;
-    findContours(mask_dilated,contours,RETR_EXTERNAL,CHAIN_APPROX_SIMPLE);
+    cv::findContours(mask_dilated,contours,RETR_EXTERNAL,CHAIN_APPROX_SIMPLE);
 
     // Approximate contours to polygons + get bounding circles
     vector<vector<Point> > contours_poly( contours.size() );
@@ -293,4 +325,100 @@ pose_t BallFinder::treeID(cv::Mat frame, bool show_image, bool red_or_white,bool
     }
     
     return ballPose;
+}
+
+pose_t BallFinder::trunkFinder(cv::Mat frame, bool show_image ,bool debug) {
+    Mat cropped;
+    Mat blurred;
+    Mat mask;
+    Mat mask_eroded;
+    Mat mask_dilated;
+    Mat HSV;
+
+    stubPose.valid = false;
+
+    //Crop the bottom 70%
+    cropped = imageReducer(frame,30,true,0);
+    if (debug) {
+        imshow("cropped", cropped);
+        waitKey(0);
+    }
+    
+    //Blurred
+    GaussianBlur(cropped,blurred,Size(11, 11),0);
+
+    int width; int height;
+    height = cropped.size[0];
+    width = cropped.size[1];
+
+    cvtColor(blurred, HSV, COLOR_BGR2HSV);
+
+    inRange(HSV, Scalar (greenHSV.HSV_lower[0],greenHSV.HSV_lower[1],greenHSV.HSV_lower[2]),
+    Scalar (greenHSV.HSV_upper[0],greenHSV.HSV_upper[1],greenHSV.HSV_upper[2]),mask);
+
+    if (debug) {
+        imshow("mask", mask);
+        waitKey(0);
+    }
+    
+    // Create a structuring element (SE)
+    //Mat element = getStructuringElement(MORPH_RECT, Size(11,11));
+    Mat element = getStructuringElement(MORPH_ELLIPSE, Size(11,11));
+
+    Mat erod, dill;
+
+    cv::erode(mask,mask_eroded,element,Point(-1, -1), 1);
+
+    if (debug){
+        imshow("Eroded", mask_eroded);
+        waitKey(0);
+    }
+    
+
+    dilate(mask_eroded,mask_dilated,element,Point(-1, -1), 2);
+    
+    if (debug) {
+        imshow("Dilated", mask_dilated);
+        waitKey(0);
+    }
+    
+    vector<vector<Point>> contours;
+    cv::findContours(mask_dilated,contours,RETR_EXTERNAL,CHAIN_APPROX_SIMPLE);
+
+    // Approximate contours to polygons + get bounding circles
+    vector<vector<Point> > contours_poly( contours.size() );
+    vector<Point2f>centers( contours.size() );
+    vector<float>radius( contours.size() );
+
+    int idx = -1, max_area=0;
+    for( size_t i = 0; i < contours.size(); i++ ){
+        approxPolyDP( contours[i], contours_poly[i], 3, true );
+        minEnclosingCircle( contours_poly[i], centers[i], radius[i] );
+        int area = (int)contourArea(contours_poly[i]);     
+        if (area > max_area){
+            idx = (int)i;
+            max_area = area;
+        }
+    }
+
+  
+    if (idx>-1){
+        Point2f center = centers[idx];
+        circle( cropped, center, (int)radius[idx], Scalar(0,255,0), 2 );
+        circle( cropped, center, 3, Scalar(255,0,0), -1 );
+
+        stubPose.valid = true;
+        stubPose.x = center.x;
+        stubPose.y = center.y;
+        stubPose.z = getDistanceTree((int)radius[idx]);
+    }
+
+    if(debug) {
+        imshow("Ball", frame);
+
+        waitKey(0); // Wait for any keystroke in the window
+
+        destroyAllWindows(); //destroy all opened windows
+    }
+    return stubPose;
 }
