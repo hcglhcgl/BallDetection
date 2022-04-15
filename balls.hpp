@@ -33,6 +33,7 @@ class BallFinder
         pose_t find_ball(cv::Mat frame, bool show_image, bool red_or_white, bool debug);
         Mat imageReducer(Mat image, int percentage);
         float getDistance(int radius);
+        pose_t treeID(cv::Mat frame, bool show_image, bool red_or_white, bool debug);
     private:
         pose_t ballPose;
         Mat cameraMatrix;

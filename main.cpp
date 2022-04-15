@@ -27,15 +27,15 @@ int main( int argc, char** argv )
 
     // Looping through all files in a folder:
 
-    ///*
-    String folderpath = "/home/hcgl/Desktop/ball_detection/white_pics/*.jpg";
+    /*
+    String folderpath = "/home/hcgl/Desktop/ball_detection/photos/*.jpg";
     vector<String> filenames;
     cv::glob(folderpath, filenames);
 
     for (size_t i=0; i<filenames.size(); i++)
     {
         Mat image = imread(filenames[i]);
-        ballPose = ball_finder.find_ball(image,true, WHITE, true);
+        ballPose = ball_finder.find_ball(image,true, RED, true);
 
         if(ballPose.valid) {
             cout << " x: " << ballPose.x << " y: " << ballPose.y << " z: " << ballPose.z << endl;
@@ -44,11 +44,11 @@ int main( int argc, char** argv )
         imshow("Ball", image);
         waitKey(0); // Wait for any keystroke in the window
     } 
-    //*/
+    */
 
    // Loading a video 
-   /*
-    VideoCapture cap("/home/hcgl/Desktop/ball_detection/video/orange.h264"); 
+   ///*
+    VideoCapture cap("/home/hcgl/Desktop/ball_detection/videos/video.h264"); 
    
     // Check if camera opened successfully
     if(!cap.isOpened()){
@@ -65,10 +65,21 @@ int main( int argc, char** argv )
         if (frame.empty())
         break;
 
-        ballPose = ball_finder.find_ball(frame,true, RED, false);
+        //ballPose = ball_finder.find_ball(frame,true, RED, false);
+
+        ballPose = ball_finder.treeID(frame,false, RED, false);
 
         if(ballPose.valid) {
             cout << " x: " << ballPose.x << " y: " << ballPose.y << " z: " << ballPose.z << endl;
+            if (ballPose.id == WHITE){
+                cout << "WHITE TREE" << endl;
+            }
+            else if (ballPose.id == RED) {
+                cout << "RED TREE" << endl;
+            }
+            else {
+                cout << "UNABLE TO ID TREE" << endl;
+            }
         }
         // Display the resulting frame
         imshow( "Frame", frame );
@@ -81,7 +92,7 @@ int main( int argc, char** argv )
  
     // When everything done, release the video capture object
     cap.release();
-    */
+    //*/
 
     destroyAllWindows(); //destroy all opened windows*/
 
